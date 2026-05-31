@@ -1,0 +1,95 @@
+{
+  "name": "@absolutejs/metrics",
+  "version": "0.1.0",
+  "description": "Prometheus / OpenMetrics exposure for the AbsoluteJS substrate. Standardizes every package's metrics() shape into MetricSample[] + a Prometheus text-format renderer + an Elysia metricsPlugin. Per-source collectors as subpaths: runtime, queue, sync, secrets, rate-limit, audit, dispatch.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/absolutejs/metrics.git"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "license": "BSL-1.1",
+  "author": "Alex Kahn",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/collectors/runtime.d.ts",
+      "import": "./dist/collectors/runtime.js",
+      "default": "./dist/collectors/runtime.js"
+    },
+    "./queue": {
+      "types": "./dist/collectors/queue.d.ts",
+      "import": "./dist/collectors/queue.js",
+      "default": "./dist/collectors/queue.js"
+    },
+    "./sync": {
+      "types": "./dist/collectors/sync.d.ts",
+      "import": "./dist/collectors/sync.js",
+      "default": "./dist/collectors/sync.js"
+    },
+    "./secrets": {
+      "types": "./dist/collectors/secrets.d.ts",
+      "import": "./dist/collectors/secrets.js",
+      "default": "./dist/collectors/secrets.js"
+    },
+    "./rate-limit": {
+      "types": "./dist/collectors/rateLimit.d.ts",
+      "import": "./dist/collectors/rateLimit.js",
+      "default": "./dist/collectors/rateLimit.js"
+    },
+    "./audit": {
+      "types": "./dist/collectors/audit.d.ts",
+      "import": "./dist/collectors/audit.js",
+      "default": "./dist/collectors/audit.js"
+    },
+    "./dispatch": {
+      "types": "./dist/collectors/dispatch.d.ts",
+      "import": "./dist/collectors/dispatch.js",
+      "default": "./dist/collectors/dispatch.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts --outdir dist --root src --sourcemap --target=bun --external elysia && tsc --project tsconfig.build.json",
+    "test": "bun test tests/",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"./**/*.{ts,json,md}\"",
+    "check:package": "bun run typecheck && bun run build && bun run test",
+    "release": "bun run format && bun run check:package && bun publish"
+  },
+  "keywords": [
+    "absolutejs",
+    "prometheus",
+    "openmetrics",
+    "observability",
+    "metrics",
+    "elysia"
+  ],
+  "peerDependencies": {
+    "bun-types": "^1.3.14",
+    "elysia": ">= 1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "elysia": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "elysia": "latest",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.0"
+  }
+}
