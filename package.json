@@ -16,6 +16,9 @@
   "type": "module",
   "license": "BSL-1.1",
   "author": "Alex Kahn",
+  "absolutejs": {
+    "manifestContract": 1
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -56,7 +59,13 @@
       "types": "./dist/collectors/dispatch.d.ts",
       "import": "./dist/collectors/dispatch.js",
       "default": "./dist/collectors/dispatch.js"
-    }
+    },
+    "./manifest": {
+      "types": "./dist/manifest.d.ts",
+      "import": "./dist/manifest.js",
+      "default": "./dist/manifest.js"
+    },
+    "./manifest.json": "./dist/manifest.json"
   },
   "publishConfig": {
     "access": "public"
@@ -66,7 +75,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts --outdir dist --root src --sourcemap --target=bun --external elysia && tsc --project tsconfig.build.json",
+    "build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts src/manifest.ts --outdir dist --root src --sourcemap --target=bun --external elysia && tsc --project tsconfig.build.json && absolute-manifest emit",
     "test": "bun test tests/",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"./**/*.{ts,json,md}\"",
@@ -95,5 +104,9 @@
     "elysia": "latest",
     "prettier": "^3.8.3",
     "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "@absolutejs/manifest": "^0.1.0",
+    "@sinclair/typebox": "^0.34.0"
   }
 }
