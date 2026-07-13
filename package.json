@@ -1,6 +1,6 @@
 {
   "name": "@absolutejs/metrics",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Prometheus / OpenMetrics exposure for the AbsoluteJS substrate. Standardizes every package's metrics() shape into MetricSample[] + a Prometheus text-format renderer + an Elysia metricsPlugin. Per-source collectors as subpaths: runtime, queue, sync, secrets, rate-limit, audit, dispatch.",
   "repository": {
     "type": "git",
