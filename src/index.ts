@@ -240,7 +240,9 @@ export const metricsPlugin = async (
 	if (options.makeElysia !== undefined) {
 		app = options.makeElysia();
 	} else {
-		const mod = (await import('elysia')) as { Elysia: new (init?: { name?: string }) => ElysiaLike };
+		const mod = (await import('elysia')) as {
+			Elysia: new (init?: { name?: string }) => ElysiaLike;
+		};
 		app = new mod.Elysia({ name: '@absolutejs/metrics' });
 	}
 	app.get(path, async () => {

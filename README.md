@@ -31,14 +31,42 @@ import { syncCollector } from '@absolutejs/metrics/sync';
 import { secretsCollector } from '@absolutejs/metrics/secrets';
 import { auditCollector } from '@absolutejs/metrics/audit';
 import { dispatchCollector } from '@absolutejs/metrics/dispatch';
+import { errorsCollector } from '@absolutejs/metrics/errors';
+import { logsCollector } from '@absolutejs/metrics/logs';
 
 const registry = createMetricsRegistry();
-registry.register('runtime', runtimeCollector(() => runtime.metrics()));
-registry.register('queue', queueCollector(() => worker.metrics()));
-registry.register('sync', syncCollector(() => engine.metrics()));
-registry.register('secrets', secretsCollector(() => broker.metrics()));
-registry.register('audit', auditCollector(() => audit.metrics()));
-registry.register('dispatch', dispatchCollector(() => dispatcher.metrics()));
+registry.register(
+	'runtime',
+	runtimeCollector(() => runtime.metrics())
+);
+registry.register(
+	'queue',
+	queueCollector(() => worker.metrics())
+);
+registry.register(
+	'sync',
+	syncCollector(() => engine.metrics())
+);
+registry.register(
+	'secrets',
+	secretsCollector(() => broker.metrics())
+);
+registry.register(
+	'audit',
+	auditCollector(() => audit.metrics())
+);
+registry.register(
+	'dispatch',
+	dispatchCollector(() => dispatcher.metrics())
+);
+registry.register(
+	'errors',
+	errorsCollector(() => tracker.metrics())
+);
+registry.register(
+	'logs',
+	logsCollector(() => logger.metrics())
+);
 
 const app = new Elysia().use(await metricsPlugin({ registry }));
 //        GET /metrics → Prometheus text
@@ -63,15 +91,17 @@ abs_sync_subscriptions 142
 
 Each substrate package gets its own subpath import:
 
-| Subpath | Source |
-| --- | --- |
-| `@absolutejs/metrics/runtime` | `@absolutejs/runtime` |
-| `@absolutejs/metrics/queue` | `@absolutejs/queue` |
-| `@absolutejs/metrics/sync` | `@absolutejs/sync` engine |
-| `@absolutejs/metrics/secrets` | `@absolutejs/secrets` broker |
-| `@absolutejs/metrics/rate-limit` | `@absolutejs/rate-limit` |
-| `@absolutejs/metrics/audit` | `@absolutejs/audit` |
-| `@absolutejs/metrics/dispatch` | `@absolutejs/dispatch` |
+| Subpath                          | Source                       |
+| -------------------------------- | ---------------------------- |
+| `@absolutejs/metrics/runtime`    | `@absolutejs/runtime`        |
+| `@absolutejs/metrics/queue`      | `@absolutejs/queue`          |
+| `@absolutejs/metrics/sync`       | `@absolutejs/sync` engine    |
+| `@absolutejs/metrics/secrets`    | `@absolutejs/secrets` broker |
+| `@absolutejs/metrics/rate-limit` | `@absolutejs/rate-limit`     |
+| `@absolutejs/metrics/audit`      | `@absolutejs/audit`          |
+| `@absolutejs/metrics/dispatch`   | `@absolutejs/dispatch`       |
+| `@absolutejs/metrics/errors`     | `@absolutejs/errors` tracker |
+| `@absolutejs/metrics/logs`       | `@absolutejs/logs` logger    |
 
 The substrate packages aren't hard deps. Each collector takes a
 `() => <metrics shape>` function — pass `() => instance.metrics()`
@@ -83,13 +113,13 @@ and TypeScript's structural typing handles the rest.
 import { counter, gauge } from '@absolutejs/metrics';
 
 registry.register('app', () => [
-  counter('myapp_requests_total', requestCount, {
-    help: 'Total HTTP requests',
-    labels: { route: '/api/users' }
-  }),
-  gauge('myapp_workers', activeWorkers, {
-    help: 'Currently running workers'
-  })
+	counter('myapp_requests_total', requestCount, {
+		help: 'Total HTTP requests',
+		labels: { route: '/api/users' }
+	}),
+	gauge('myapp_workers', activeWorkers, {
+		help: 'Currently running workers'
+	})
 ]);
 ```
 

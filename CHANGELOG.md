@@ -1,5 +1,42 @@
 # @absolutejs/metrics changelog
 
+## 0.2.0 — 2026-07-13
+
+Completes the observability triad's exposure path: the errors and
+logs packages now have collector subpaths like the rest of the
+substrate.
+
+### Added — collectors
+
+| Subpath   | Translates                                                                           |
+| --------- | ------------------------------------------------------------------------------------ |
+| `/errors` | `@absolutejs/errors` tracker — captured, capture errors, distinct fingerprints       |
+| `/logs`   | `@absolutejs/logs` logger — emitted per level, writes, write errors, per-sink errors |
+
+- **`errorsCollector`** (`@absolutejs/metrics/errors`) — translates
+  `tracker.metrics()` (`ErrorTrackerMetrics`) into
+  `abs_errors_captured_total`, `abs_errors_capture_errors_total`, and
+  the `abs_errors_fingerprints` gauge. `byFingerprint` is emitted as
+  the **distinct count only** — fingerprints are content-derived and
+  effectively unbounded, so per-fingerprint labels would be a
+  Prometheus cardinality anti-pattern (unlike the bounded,
+  operator-defined key sets other collectors label on).
+- **`logsCollector`** (`@absolutejs/metrics/logs`) — translates
+  `logger.metrics()` (`LoggerMetrics`) into
+  `abs_logs_emitted_total{level=…}` (bounded six-level set),
+  `abs_logs_writes_total`, `abs_logs_write_errors_total`, and
+  `abs_logs_sink_errors_total{sink=…}`.
+
+Both follow the established collector contract: a
+`() => instance.metrics()` thunk with a structurally-typed shape — no
+hard dep on the source package; absent fields are skipped.
+
+### Repo
+
+- Added the family-standard `.prettierrc` (tabs, single quotes, no
+  trailing comma) that sibling repos already carry; `bun run format`
+  previously fell back to Prettier defaults.
+
 ## 0.1.0 — 2026-05-31
 
 Initial release. Closes the first part of G9 (observability triad) —
@@ -8,7 +45,7 @@ the substrate now has Prometheus / OpenMetrics exposure.
 ### Added — core library
 
 - **`MetricSample`** intermediate format. `{ name, value, type, help?,
-  labels? }`. The minimum shape every Prometheus emission needs.
+labels? }`. The minimum shape every Prometheus emission needs.
 - **`MetricCollector`** — function returning samples. Sync or async.
 - **`createMetricsRegistry()`** — composes collectors under
   source names; `register` / `unregister` / `collect` / `render` /
@@ -32,15 +69,15 @@ Each collector takes a `() => <metrics shape>` function so the
 substrate packages aren't hard deps. Pass `() => instance.metrics()`;
 TypeScript's structural typing handles the rest.
 
-| Subpath | Translates |
-| --- | --- |
-| `/runtime` | `@absolutejs/runtime` — active, spawns, exits-by-reason, backoff, uptime |
-| `/queue` | `@absolutejs/queue` — runs/completed/failed/retried/dead-lettered, polls, reaped, last-tick |
-| `/sync` | `@absolutejs/sync` engine — version, changelog, subscriptions (incl. per-collection), mutations, schedules, cache |
-| `/secrets` | `@absolutejs/secrets` broker — resolves/hits/misses/errors, rotates, redacts, cache entries |
-| `/rate-limit` | `@absolutejs/rate-limit` — allow/block decisions with labels, drift, store size |
-| `/audit` | `@absolutejs/audit` — appended, append errors, per-sink errors with labels |
-| `/dispatch` | `@absolutejs/dispatch` — sent/failed totals plus per-channel breakdown |
+| Subpath       | Translates                                                                                                        |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/runtime`    | `@absolutejs/runtime` — active, spawns, exits-by-reason, backoff, uptime                                          |
+| `/queue`      | `@absolutejs/queue` — runs/completed/failed/retried/dead-lettered, polls, reaped, last-tick                       |
+| `/sync`       | `@absolutejs/sync` engine — version, changelog, subscriptions (incl. per-collection), mutations, schedules, cache |
+| `/secrets`    | `@absolutejs/secrets` broker — resolves/hits/misses/errors, rotates, redacts, cache entries                       |
+| `/rate-limit` | `@absolutejs/rate-limit` — allow/block decisions with labels, drift, store size                                   |
+| `/audit`      | `@absolutejs/audit` — appended, append errors, per-sink errors with labels                                        |
+| `/dispatch`   | `@absolutejs/dispatch` — sent/failed totals plus per-channel breakdown                                            |
 
 ### Conventions
 

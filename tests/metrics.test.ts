@@ -49,8 +49,12 @@ describe('renderPrometheus', () => {
 				labels: { reason: 'idle' }
 			})
 		]);
-		expect((text.match(/# HELP abs_runtime_exits_total/g) ?? [])).toHaveLength(1);
-		expect((text.match(/# TYPE abs_runtime_exits_total/g) ?? [])).toHaveLength(1);
+		expect(
+			text.match(/# HELP abs_runtime_exits_total/g) ?? []
+		).toHaveLength(1);
+		expect(
+			text.match(/# TYPE abs_runtime_exits_total/g) ?? []
+		).toHaveLength(1);
 		expect(text).toContain('abs_runtime_exits_total{reason="crashed"} 3');
 		expect(text).toContain('abs_runtime_exits_total{reason="idle"} 7');
 	});
@@ -165,11 +169,15 @@ describe('runtimeCollector', () => {
 		expect(names).toContain('abs_runtime_spawns_total');
 		expect(names).toContain('abs_runtime_backoff_total');
 		// Two exit-reason permutations under one name.
-		expect(samples.filter((s) => s.name === 'abs_runtime_exits_total')).toHaveLength(2);
-		expect(samples.find((s) => s.labels?.reason === 'crashed')?.value).toBe(1);
+		expect(
+			samples.filter((s) => s.name === 'abs_runtime_exits_total')
+		).toHaveLength(2);
+		expect(samples.find((s) => s.labels?.reason === 'crashed')?.value).toBe(
+			1
+		);
 	});
 
-	test('skips fields that aren\'t reported', async () => {
+	test("skips fields that aren't reported", async () => {
 		const collector = runtimeCollector(() => ({ active: 1 }));
 		const samples = await collector();
 		expect(samples).toHaveLength(1);
@@ -209,14 +217,15 @@ describe('queueCollector', () => {
 
 	test('draining=true → gauge value 1', async () => {
 		const samples = await queueCollector(() => ({ draining: true }))();
-		expect(samples.find((s) => s.name === 'abs_queue_draining')?.value).toBe(1);
+		expect(
+			samples.find((s) => s.name === 'abs_queue_draining')?.value
+		).toBe(1);
 	});
 
 	test('static labels applied to every sample', async () => {
-		const samples = await queueCollector(
-			() => ({ runs: 10 }),
-			{ labels: { worker: 'email' } }
-		)();
+		const samples = await queueCollector(() => ({ runs: 10 }), {
+			labels: { worker: 'email' }
+		})();
 		expect(samples[0]?.labels?.worker).toBe('email');
 	});
 });
@@ -304,7 +313,9 @@ describe('auditCollector', () => {
 			(s) => s.name === 'abs_audit_sink_errors_total'
 		);
 		expect(sinkErrors).toHaveLength(2);
-		expect(sinkErrors.find((s) => s.labels?.sink === 'postgres')?.value).toBe(1);
+		expect(
+			sinkErrors.find((s) => s.labels?.sink === 'postgres')?.value
+		).toBe(1);
 	});
 });
 
@@ -319,13 +330,17 @@ describe('dispatchCollector', () => {
 			failed: 1,
 			sent: 149
 		}))();
-		const totals = samples.filter((s) => s.name === 'abs_dispatch_sent_total');
+		const totals = samples.filter(
+			(s) => s.name === 'abs_dispatch_sent_total'
+		);
 		expect(totals[0]?.value).toBe(149);
 		const channelSends = samples.filter(
 			(s) => s.name === 'abs_dispatch_channel_sent_total'
 		);
 		expect(channelSends).toHaveLength(3);
-		expect(channelSends.find((s) => s.labels?.channel === 'email')?.value).toBe(99);
+		expect(
+			channelSends.find((s) => s.labels?.channel === 'email')?.value
+		).toBe(99);
 	});
 });
 
@@ -340,9 +355,16 @@ describe('rateLimitCollector', () => {
 			(s) => s.name === 'abs_rate_limit_decisions_total'
 		);
 		expect(decisions).toHaveLength(2);
-		expect(decisions.find((s) => s.labels?.decision === 'allow')?.value).toBe(100);
-		expect(decisions.find((s) => s.labels?.decision === 'block')?.value).toBe(5);
-		expect(samples.find((s) => s.name === 'abs_rate_limit_store_entries')?.value).toBe(12);
+		expect(
+			decisions.find((s) => s.labels?.decision === 'allow')?.value
+		).toBe(100);
+		expect(
+			decisions.find((s) => s.labels?.decision === 'block')?.value
+		).toBe(5);
+		expect(
+			samples.find((s) => s.name === 'abs_rate_limit_store_entries')
+				?.value
+		).toBe(12);
 	});
 
 	test('static labels merged with allow/block labels', async () => {
@@ -385,7 +407,9 @@ describe('metricsPlugin', () => {
 		expect(registeredPath).toBe('/observe');
 		expect(handler).toBeDefined();
 		const response = await handler!();
-		expect(response.headers.get('content-type')).toBe(PROMETHEUS_CONTENT_TYPE);
+		expect(response.headers.get('content-type')).toBe(
+			PROMETHEUS_CONTENT_TYPE
+		);
 		const text = await response.text();
 		expect(text).toContain('abs_runtime_active 3');
 		expect(text).toContain('# HELP abs_runtime_active');
@@ -425,7 +449,9 @@ describe('metricsPlugin', () => {
 		});
 		const response = await handler!();
 		expect(response.status).toBe(500);
-		expect(response.headers.get('content-type')).toBe(PROMETHEUS_CONTENT_TYPE);
+		expect(response.headers.get('content-type')).toBe(
+			PROMETHEUS_CONTENT_TYPE
+		);
 		expect(await response.text()).toContain('collector blew up');
 	});
 });
@@ -437,19 +463,28 @@ describe('metricsPlugin', () => {
 describe('end-to-end', () => {
 	test('wiring runtime + queue + sync via registry produces composed output', async () => {
 		const registry = createMetricsRegistry();
-		registry.register('runtime', runtimeCollector(() => ({
-			active: 2,
-			totalSpawns: 10
-		})));
-		registry.register('queue', queueCollector(() => ({
-			active: 1,
-			completed: 50,
-			failed: 0
-		})));
-		registry.register('sync', syncCollector(() => ({
-			subscriptions: { total: 5 },
-			version: 42
-		})));
+		registry.register(
+			'runtime',
+			runtimeCollector(() => ({
+				active: 2,
+				totalSpawns: 10
+			}))
+		);
+		registry.register(
+			'queue',
+			queueCollector(() => ({
+				active: 1,
+				completed: 50,
+				failed: 0
+			}))
+		);
+		registry.register(
+			'sync',
+			syncCollector(() => ({
+				subscriptions: { total: 5 },
+				version: 42
+			}))
+		);
 		const text = await registry.render();
 		expect(text).toContain('abs_runtime_active 2');
 		expect(text).toContain('abs_runtime_spawns_total 10');
