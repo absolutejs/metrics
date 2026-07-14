@@ -1,5 +1,12 @@
 # @absolutejs/metrics changelog
 
+## 0.2.2 — 2026-07-14
+
+- The secrets collector now consumes current `@absolutejs/secrets` metrics:
+  `redactionsApplied` and `redactionsBase64`. It retains the legacy
+  `redactsApplied` alias for older brokers and emits the new
+  `abs_secrets_redactions_base64_total` counter.
+
 ## 0.2.1 — 2026-07-14
 
 - `metricsPlugin()` now accepts an async `authorize(request)` callback so a

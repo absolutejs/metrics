@@ -285,7 +285,8 @@ describe('secretsCollector', () => {
 			cacheEntries: 5,
 			invalidations: 3,
 			redactCalls: 10,
-			redactsApplied: 7,
+			redactionsApplied: 7,
+			redactionsBase64: 2,
 			resolveErrors: 1,
 			resolveHits: 80,
 			resolveMisses: 20,
@@ -298,7 +299,16 @@ describe('secretsCollector', () => {
 		expect(names).toContain('abs_secrets_resolve_hits_total');
 		expect(names).toContain('abs_secrets_rotates_total');
 		expect(names).toContain('abs_secrets_redact_calls_total');
+		expect(names).toContain('abs_secrets_redactions_base64_total');
 		expect(names).toContain('abs_secrets_cache_entries');
+	});
+
+	test('accepts the legacy redactsApplied field', async () => {
+		const samples = await secretsCollector(() => ({ redactsApplied: 3 }))();
+		expect(
+			samples.find((sample) => sample.name === 'abs_secrets_redacts_applied_total')
+				?.value
+		).toBe(3);
 	});
 });
 

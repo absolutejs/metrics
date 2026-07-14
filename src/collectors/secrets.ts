@@ -18,6 +18,11 @@ export type SecretsMetricsShape = {
 	rotateErrors?: number;
 	invalidations?: number;
 	redactCalls?: number;
+	/** Current @absolutejs/secrets field. */
+	redactionsApplied?: number;
+	/** Current subset of redactionsApplied that matched base64 values. */
+	redactionsBase64?: number;
+	/** Legacy alias retained for older brokers. */
 	redactsApplied?: number;
 	cacheEntries?: number;
 };
@@ -90,8 +95,14 @@ export const secretsCollector =
 		push(
 			counter,
 			'abs_secrets_redacts_applied_total',
-			m.redactsApplied,
+			m.redactionsApplied ?? m.redactsApplied,
 			'Distinct (secret, encoding) pairs that triggered a replacement'
+		);
+		push(
+			counter,
+			'abs_secrets_redactions_base64_total',
+			m.redactionsBase64,
+			'Distinct base64-encoded secrets that triggered a replacement'
 		);
 		push(
 			gauge,
