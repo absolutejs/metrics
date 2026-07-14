@@ -1,5 +1,12 @@
 # @absolutejs/metrics changelog
 
+## 0.2.6 — 2026-07-14
+
+- Adds `@absolutejs/metrics/router`, translating route and acquire counters,
+  last-route latency, rejections by the router's closed decision vocabulary,
+  and load distribution by operator-configured shard. Tenant ids are never
+  emitted as labels.
+
 ## 0.2.5 — 2026-07-14
 
 - Runtime collection now consumes the current `running`, `backoff`, and
