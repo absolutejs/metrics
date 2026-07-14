@@ -1,5 +1,12 @@
 # @absolutejs/metrics changelog
 
+## 0.2.3 — 2026-07-14
+
+- Add `@absolutejs/metrics/egress`: a bounded-cardinality collector for
+  `@absolutejs/runtime`'s egress guard metrics. It emits tracked tenants,
+  admitted requests, observed response bytes, and denials labeled only by the
+  guard's closed reason vocabulary; tenant IDs never become Prometheus labels.
+
 ## 0.2.2 — 2026-07-14
 
 - The secrets collector now consumes current `@absolutejs/secrets` metrics:

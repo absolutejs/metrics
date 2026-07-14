@@ -1,7 +1,7 @@
 {
 	"name": "@absolutejs/metrics",
-	"version": "0.2.2",
-	"description": "Prometheus / OpenMetrics exposure for the AbsoluteJS substrate. Standardizes every package's metrics() shape into MetricSample[] + a Prometheus text-format renderer + an Elysia metricsPlugin. Per-source collectors as subpaths: runtime, queue, sync, secrets, rate-limit, audit, dispatch, errors, logs.",
+	"version": "0.2.3",
+	"description": "Prometheus / OpenMetrics exposure for the AbsoluteJS substrate. Standardizes every package's metrics() shape into MetricSample[] + a Prometheus text-format renderer + an Elysia metricsPlugin. Per-source collectors as subpaths: runtime, egress, queue, sync, secrets, rate-limit, audit, dispatch, errors, logs.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/absolutejs/metrics.git"
@@ -29,6 +29,11 @@
 			"types": "./dist/collectors/runtime.d.ts",
 			"import": "./dist/collectors/runtime.js",
 			"default": "./dist/collectors/runtime.js"
+		},
+		"./egress": {
+			"types": "./dist/collectors/egress.d.ts",
+			"import": "./dist/collectors/egress.js",
+			"default": "./dist/collectors/egress.js"
 		},
 		"./queue": {
 			"types": "./dist/collectors/queue.d.ts",
@@ -85,7 +90,7 @@
 		"README.md"
 	],
 	"scripts": {
-		"build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts src/collectors/errors.ts src/collectors/logs.ts src/manifest.ts --outdir dist --root src --sourcemap --target=bun --external elysia && tsc --project tsconfig.build.json && absolute-manifest emit",
+		"build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/egress.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts src/collectors/errors.ts src/collectors/logs.ts src/manifest.ts --outdir dist --root src --sourcemap --target=bun --external elysia && tsc --project tsconfig.build.json && absolute-manifest emit",
 		"test": "bun test tests/",
 		"typecheck": "tsc --noEmit",
 		"format": "prettier --write \"./**/*.{ts,json,md}\"",

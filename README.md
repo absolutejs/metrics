@@ -26,6 +26,7 @@ bun add @absolutejs/metrics
 import { Elysia } from 'elysia';
 import { createMetricsRegistry, metricsPlugin } from '@absolutejs/metrics';
 import { runtimeCollector } from '@absolutejs/metrics/runtime';
+import { egressCollector } from '@absolutejs/metrics/egress';
 import { queueCollector } from '@absolutejs/metrics/queue';
 import { syncCollector } from '@absolutejs/metrics/sync';
 import { secretsCollector } from '@absolutejs/metrics/secrets';
@@ -38,6 +39,10 @@ const registry = createMetricsRegistry();
 registry.register(
 	'runtime',
 	runtimeCollector(() => runtime.metrics())
+);
+registry.register(
+	'egress',
+	egressCollector(() => egressGuard.metrics())
 );
 registry.register(
 	'queue',
@@ -107,6 +112,7 @@ Each substrate package gets its own subpath import:
 | Subpath                          | Source                       |
 | -------------------------------- | ---------------------------- |
 | `@absolutejs/metrics/runtime`    | `@absolutejs/runtime`        |
+| `@absolutejs/metrics/egress`     | runtime egress guard         |
 | `@absolutejs/metrics/queue`      | `@absolutejs/queue`          |
 | `@absolutejs/metrics/sync`       | `@absolutejs/sync` engine    |
 | `@absolutejs/metrics/secrets`    | `@absolutejs/secrets` broker |
