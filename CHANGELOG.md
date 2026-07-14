@@ -1,5 +1,13 @@
 # @absolutejs/metrics changelog
 
+## 0.2.4 — 2026-07-14
+
+- Adds `wakeSchedulerCollector` on the existing `/queue` subpath for
+  `@absolutejs/queue`'s control-plane scheduler metrics: schedules, enabled and
+  draining state, firings, errors, catch-up misses, overlap skips, and tick
+  latency. Static labels distinguish multiple schedulers without coupling the
+  metrics package to queue as a runtime dependency.
+
 ## 0.2.3 — 2026-07-14
 
 - Add `@absolutejs/metrics/egress`: a bounded-cardinality collector for

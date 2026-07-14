@@ -37,6 +37,17 @@ export type QueueCollectorOptions = {
 	labels?: Record<string, string>;
 };
 
+export type WakeSchedulerMetricsShape = {
+	draining?: boolean;
+	enabled?: number;
+	entries?: number;
+	errors?: number;
+	firings?: number;
+	lastTickMs?: number;
+	missedSkipped?: number;
+	skippedTicks?: number;
+};
+
 export const queueCollector =
 	(
 		source: () => QueueMetricsShape | Promise<QueueMetricsShape>,
@@ -119,6 +130,86 @@ export const queueCollector =
 			'abs_queue_last_tick_ms',
 			m.lastTickMs,
 			'Wall-clock duration of the most recent tick()'
+		);
+
+		return samples;
+	};
+
+/** Collector for `@absolutejs/queue`'s `WakeScheduler.metrics()` shape. */
+export const wakeSchedulerCollector =
+	(
+		source: () =>
+			| WakeSchedulerMetricsShape
+			| Promise<WakeSchedulerMetricsShape>,
+		options: QueueCollectorOptions = {}
+	): MetricCollector =>
+	async () => {
+		const metrics = await source();
+		const samples: MetricSample[] = [];
+		const labels = options.labels;
+		const push = (
+			factory: typeof counter | typeof gauge,
+			name: string,
+			value: number | undefined,
+			help: string
+		) => {
+			if (value === undefined) return;
+			samples.push(
+				factory(name, value, { help, ...(labels ? { labels } : {}) })
+			);
+		};
+
+		push(
+			gauge,
+			'abs_queue_wake_entries',
+			metrics.entries,
+			'Configured wake schedules'
+		);
+		push(
+			gauge,
+			'abs_queue_wake_enabled',
+			metrics.enabled,
+			'Enabled wake schedules'
+		);
+		push(
+			gauge,
+			'abs_queue_wake_draining',
+			metrics.draining === undefined
+				? undefined
+				: metrics.draining
+					? 1
+					: 0,
+			'1 if the wake scheduler is draining; 0 otherwise'
+		);
+		push(
+			counter,
+			'abs_queue_wake_firings_total',
+			metrics.firings,
+			'Wake firings'
+		);
+		push(
+			counter,
+			'abs_queue_wake_errors_total',
+			metrics.errors,
+			'Failed wake firings'
+		);
+		push(
+			counter,
+			'abs_queue_wake_missed_skipped_total',
+			metrics.missedSkipped,
+			'Missed wake firings skipped during catch-up'
+		);
+		push(
+			counter,
+			'abs_queue_wake_skipped_ticks_total',
+			metrics.skippedTicks,
+			'Wake scheduler ticks skipped due to overlap'
+		);
+		push(
+			gauge,
+			'abs_queue_wake_last_tick_ms',
+			metrics.lastTickMs,
+			'Wall-clock duration of the most recent wake tick()'
 		);
 
 		return samples;

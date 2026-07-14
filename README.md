@@ -27,7 +27,10 @@ import { Elysia } from 'elysia';
 import { createMetricsRegistry, metricsPlugin } from '@absolutejs/metrics';
 import { runtimeCollector } from '@absolutejs/metrics/runtime';
 import { egressCollector } from '@absolutejs/metrics/egress';
-import { queueCollector } from '@absolutejs/metrics/queue';
+import {
+	queueCollector,
+	wakeSchedulerCollector
+} from '@absolutejs/metrics/queue';
 import { syncCollector } from '@absolutejs/metrics/sync';
 import { secretsCollector } from '@absolutejs/metrics/secrets';
 import { auditCollector } from '@absolutejs/metrics/audit';
@@ -47,6 +50,12 @@ registry.register(
 registry.register(
 	'queue',
 	queueCollector(() => worker.metrics())
+);
+registry.register(
+	'billing-wakes',
+	wakeSchedulerCollector(() => billingScheduler.metrics(), {
+		labels: { scheduler: 'billing' }
+	})
 );
 registry.register(
 	'sync',

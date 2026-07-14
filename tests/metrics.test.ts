@@ -13,7 +13,10 @@ import {
 	type MetricSample
 } from '../src/index';
 import { runtimeCollector } from '../src/collectors/runtime';
-import { queueCollector } from '../src/collectors/queue';
+import {
+	queueCollector,
+	wakeSchedulerCollector
+} from '../src/collectors/queue';
 import { syncCollector } from '../src/collectors/sync';
 import { secretsCollector } from '../src/collectors/secrets';
 import { auditCollector } from '../src/collectors/audit';
@@ -230,6 +233,39 @@ describe('queueCollector', () => {
 	});
 });
 
+describe('wakeSchedulerCollector', () => {
+	test('emits wake scheduler metrics with static labels', async () => {
+		const samples = await wakeSchedulerCollector(
+			() => ({
+				draining: false,
+				enabled: 2,
+				entries: 3,
+				errors: 1,
+				firings: 8,
+				lastTickMs: 4,
+				missedSkipped: 2,
+				skippedTicks: 1
+			}),
+			{ labels: { scheduler: 'billing' } }
+		)();
+		const byName = Object.fromEntries(
+			samples.map((sample) => [sample.name, sample.value])
+		);
+
+		expect(byName.abs_queue_wake_entries).toBe(3);
+		expect(byName.abs_queue_wake_enabled).toBe(2);
+		expect(byName.abs_queue_wake_draining).toBe(0);
+		expect(byName.abs_queue_wake_firings_total).toBe(8);
+		expect(byName.abs_queue_wake_errors_total).toBe(1);
+		expect(byName.abs_queue_wake_missed_skipped_total).toBe(2);
+		expect(byName.abs_queue_wake_skipped_ticks_total).toBe(1);
+		expect(byName.abs_queue_wake_last_tick_ms).toBe(4);
+		expect(
+			samples.every((sample) => sample.labels?.scheduler === 'billing')
+		).toBe(true);
+	});
+});
+
 // =============================================================================
 // syncCollector
 // =============================================================================
@@ -306,8 +342,9 @@ describe('secretsCollector', () => {
 	test('accepts the legacy redactsApplied field', async () => {
 		const samples = await secretsCollector(() => ({ redactsApplied: 3 }))();
 		expect(
-			samples.find((sample) => sample.name === 'abs_secrets_redacts_applied_total')
-				?.value
+			samples.find(
+				(sample) => sample.name === 'abs_secrets_redacts_applied_total'
+			)?.value
 		).toBe(3);
 	});
 });
@@ -406,7 +443,9 @@ describe('metricsPlugin', () => {
 		const fakeApp = {
 			get: (
 				path: string,
-				fn: (context: { request: Request }) => Promise<Response> | Response
+				fn: (context: {
+					request: Request;
+				}) => Promise<Response> | Response
 			) => {
 				registeredPath = path;
 				handler = fn;
@@ -438,7 +477,9 @@ describe('metricsPlugin', () => {
 		const fakeApp = {
 			get: (
 				path: string,
-				_fn: (context: { request: Request }) => Promise<Response> | Response
+				_fn: (context: {
+					request: Request;
+				}) => Promise<Response> | Response
 			) => {
 				registeredPath = path;
 				return fakeApp;
@@ -462,7 +503,9 @@ describe('metricsPlugin', () => {
 		const fakeApp = {
 			get: (
 				_path: string,
-				fn: (context: { request: Request }) => Promise<Response> | Response
+				fn: (context: {
+					request: Request;
+				}) => Promise<Response> | Response
 			) => {
 				handler = fn;
 				return fakeApp;
@@ -495,7 +538,9 @@ describe('metricsPlugin', () => {
 		const fakeApp = {
 			get: (
 				_path: string,
-				fn: (context: { request: Request }) => Promise<Response> | Response
+				fn: (context: {
+					request: Request;
+				}) => Promise<Response> | Response
 			) => {
 				handler = fn;
 				return fakeApp;
