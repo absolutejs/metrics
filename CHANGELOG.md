@@ -1,5 +1,11 @@
 # @absolutejs/metrics changelog
 
+## 0.2.5 — 2026-07-14
+
+- Runtime collection now consumes the current `running`, `backoff`, and
+  `lastSpawnMs` fields while retaining compatibility with the legacy `active`
+  field.
+
 ## 0.2.4 — 2026-07-14
 
 - Adds `wakeSchedulerCollector` on the existing `/queue` subpath for

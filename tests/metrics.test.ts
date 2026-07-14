@@ -155,10 +155,11 @@ describe('createMetricsRegistry', () => {
 // =============================================================================
 
 describe('runtimeCollector', () => {
-	test('emits active + spawns + exits + backoff + uptime', async () => {
+	test('emits current runtime gauges + spawns + exits + backoff + uptime', async () => {
 		const collector = runtimeCollector(() => ({
-			active: 3,
+			backoff: 1,
 			lastSpawnMs: 12,
+			running: 3,
 			startedAt: 1000,
 			totalBackoffEntries: 2,
 			totalExits: { crashed: 1, idle: 4 },
@@ -168,6 +169,8 @@ describe('runtimeCollector', () => {
 		const samples = await collector();
 		const names = samples.map((s) => s.name).sort();
 		expect(names).toContain('abs_runtime_active');
+		expect(names).toContain('abs_runtime_backoff_current');
+		expect(names).toContain('abs_runtime_last_spawn_ms');
 		expect(names).toContain('abs_runtime_uptime_ms');
 		expect(names).toContain('abs_runtime_spawns_total');
 		expect(names).toContain('abs_runtime_backoff_total');
@@ -178,6 +181,15 @@ describe('runtimeCollector', () => {
 		expect(samples.find((s) => s.labels?.reason === 'crashed')?.value).toBe(
 			1
 		);
+	});
+
+	test('accepts the legacy active field when running is absent', async () => {
+		const collector = runtimeCollector(() => ({ active: 2 }));
+		const samples = await collector();
+		expect(samples[0]).toMatchObject({
+			name: 'abs_runtime_active',
+			value: 2
+		});
 	});
 
 	test("skips fields that aren't reported", async () => {
