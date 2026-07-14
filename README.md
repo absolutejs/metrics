@@ -72,6 +72,19 @@ const app = new Elysia().use(await metricsPlugin({ registry }));
 //        GET /metrics → Prometheus text
 ```
 
+On a listener reachable outside a trusted scrape network, authorize before any
+collector runs:
+
+```ts
+const app = new Elysia().use(
+	await metricsPlugin({
+		registry,
+		authorize: (request) =>
+			request.headers.get('authorization') === `Bearer ${scrapeToken}`
+	})
+);
+```
+
 Output looks like:
 
 ```text

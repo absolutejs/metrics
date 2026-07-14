@@ -390,9 +390,14 @@ describe('metricsPlugin', () => {
 		]);
 
 		let registeredPath: string | undefined;
-		let handler: (() => Promise<Response> | Response) | undefined;
+		let handler:
+			| ((context: { request: Request }) => Promise<Response> | Response)
+			| undefined;
 		const fakeApp = {
-			get: (path: string, fn: () => Promise<Response> | Response) => {
+			get: (
+				path: string,
+				fn: (context: { request: Request }) => Promise<Response> | Response
+			) => {
 				registeredPath = path;
 				handler = fn;
 				return fakeApp;
@@ -406,7 +411,9 @@ describe('metricsPlugin', () => {
 
 		expect(registeredPath).toBe('/observe');
 		expect(handler).toBeDefined();
-		const response = await handler!();
+		const response = await handler!({
+			request: new Request('http://localhost/observe')
+		});
 		expect(response.headers.get('content-type')).toBe(
 			PROMETHEUS_CONTENT_TYPE
 		);
@@ -419,7 +426,10 @@ describe('metricsPlugin', () => {
 		const registry = createMetricsRegistry();
 		let registeredPath: string | undefined;
 		const fakeApp = {
-			get: (path: string, _fn: () => Promise<Response> | Response) => {
+			get: (
+				path: string,
+				_fn: (context: { request: Request }) => Promise<Response> | Response
+			) => {
 				registeredPath = path;
 				return fakeApp;
 			}
@@ -436,9 +446,14 @@ describe('metricsPlugin', () => {
 		registry.register('broken', () => {
 			throw new Error('collector blew up');
 		});
-		let handler: (() => Promise<Response> | Response) | undefined;
+		let handler:
+			| ((context: { request: Request }) => Promise<Response> | Response)
+			| undefined;
 		const fakeApp = {
-			get: (_path: string, fn: () => Promise<Response> | Response) => {
+			get: (
+				_path: string,
+				fn: (context: { request: Request }) => Promise<Response> | Response
+			) => {
 				handler = fn;
 				return fakeApp;
 			}
@@ -447,12 +462,57 @@ describe('metricsPlugin', () => {
 			makeElysia: () => fakeApp,
 			registry
 		});
-		const response = await handler!();
+		const response = await handler!({
+			request: new Request('http://localhost/metrics')
+		});
 		expect(response.status).toBe(500);
 		expect(response.headers.get('content-type')).toBe(
 			PROMETHEUS_CONTENT_TYPE
 		);
 		expect(await response.text()).toContain('collector blew up');
+	});
+
+	test('authorizes before collecting and rejects without running sources', async () => {
+		const registry = createMetricsRegistry();
+		let collections = 0;
+		registry.register('sensitive', () => {
+			collections++;
+			return [counter('private_total', 1)];
+		});
+		let handler:
+			| ((context: { request: Request }) => Promise<Response> | Response)
+			| undefined;
+		const fakeApp = {
+			get: (
+				_path: string,
+				fn: (context: { request: Request }) => Promise<Response> | Response
+			) => {
+				handler = fn;
+				return fakeApp;
+			}
+		};
+		await metricsPlugin({
+			authorize: (request) =>
+				request.headers.get('authorization') === 'Bearer scrape-secret',
+			makeElysia: () => fakeApp,
+			registry
+		});
+
+		const rejected = await handler!({
+			request: new Request('http://localhost/metrics')
+		});
+		expect(rejected.status).toBe(401);
+		expect(rejected.headers.get('www-authenticate')).toBe('Bearer');
+		expect(collections).toBe(0);
+
+		const accepted = await handler!({
+			request: new Request('http://localhost/metrics', {
+				headers: { authorization: 'Bearer scrape-secret' }
+			})
+		});
+		expect(accepted.status).toBe(200);
+		expect(await accepted.text()).toContain('private_total 1');
+		expect(collections).toBe(1);
 	});
 });
 

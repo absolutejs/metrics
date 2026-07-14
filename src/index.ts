@@ -210,7 +210,7 @@ export const PROMETHEUS_CONTENT_TYPE =
 type ElysiaLike = {
 	get: (
 		path: string,
-		handler: () => Promise<Response> | Response
+		handler: (context: { request: Request }) => Promise<Response> | Response
 	) => ElysiaLike;
 };
 
@@ -218,6 +218,13 @@ export type MetricsPluginOptions = {
 	registry: MetricsRegistry;
 	/** Default `'/metrics'`. */
 	path?: string;
+	/**
+	 * Optional request authorization. Runs before collection; return `false`
+	 * to reject the scrape. Omit only on a trusted/internal listener.
+	 */
+	authorize?: (request: Request) => boolean | Promise<boolean>;
+	/** Override the default 401 Bearer response for rejected scrapes. */
+	onUnauthorized?: (request: Request) => Response | Promise<Response>;
 	/**
 	 * Optional Elysia factory. If omitted we dynamically import `elysia`.
 	 * Inject a mock for tests.
@@ -245,7 +252,15 @@ export const metricsPlugin = async (
 		};
 		app = new mod.Elysia({ name: '@absolutejs/metrics' });
 	}
-	app.get(path, async () => {
+	app.get(path, async ({ request }) => {
+		if (options.authorize !== undefined && !(await options.authorize(request))) {
+			return options.onUnauthorized !== undefined
+				? options.onUnauthorized(request)
+				: new Response('Unauthorized', {
+						headers: { 'www-authenticate': 'Bearer' },
+						status: 401
+					});
+		}
 		try {
 			const body = await options.registry.render();
 			return new Response(body, {

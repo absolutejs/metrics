@@ -1,5 +1,14 @@
 # @absolutejs/metrics changelog
 
+## 0.2.1 — 2026-07-14
+
+- `metricsPlugin()` now accepts an async `authorize(request)` callback so a
+  service can protect operational counters without replacing the official
+  Elysia exposure path. Rejected requests return `401` with a Bearer challenge
+  by default; `onUnauthorized(request)` can supply a different response.
+- Authorization runs before collectors, so an unauthenticated request cannot
+  trigger or infer collector behavior.
+
 ## 0.2.0 — 2026-07-13
 
 Completes the observability triad's exposure path: the errors and
