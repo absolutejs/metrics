@@ -9,7 +9,7 @@ const tool = toolFactory<MetricsRegistry>();
  * wiring concerns; `makeElysia` is a test seam. */
 export const manifest = defineManifest<MetricsPluginOptions, MetricsRegistry>()(
 	{
-		contract: 1,
+		contract: 2,
 		identity: {
 			accent: '#0ea5e9',
 			category: 'observability',
@@ -38,6 +38,12 @@ export const manifest = defineManifest<MetricsPluginOptions, MetricsRegistry>()(
 		tools: {
 			list_metric_sources: tool.runtime({
 				annotations: { readOnlyHint: true },
+				authorization: {
+					approval: 'never',
+					audience: 'admin',
+					effects: ['read'],
+					requiredScopes: ['metrics:read']
+				},
 				description:
 					'List which metric sources (collectors) are currently registered.',
 				handler: (_input, registry) => {
@@ -51,6 +57,12 @@ export const manifest = defineManifest<MetricsPluginOptions, MetricsRegistry>()(
 			}),
 			read_metrics: tool.runtime({
 				annotations: { readOnlyHint: true },
+				authorization: {
+					approval: 'never',
+					audience: 'admin',
+					effects: ['read'],
+					requiredScopes: ['metrics:read']
+				},
 				description:
 					'Read the current values of every registered counter and gauge, rendered as Prometheus text (one line per metric with HELP/TYPE comments).',
 				handler: async (_input, registry) => {
