@@ -22,7 +22,7 @@ export const manifest = defineManifest<MetricsPluginOptions, MetricsRegistry>()(
 		},
 		requires: {
 			peers: [
-				{ name: 'elysia', range: '>= 1.4.0', reason: 'plugin host' }
+				{ name: 'elysia', range: '>=1.4.29 <2', reason: 'plugin host' }
 			]
 		},
 		settings: Type.Object({
