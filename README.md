@@ -141,6 +141,11 @@ The substrate packages aren't hard deps. Each collector takes a
 `() => <metrics shape>` function — pass `() => instance.metrics()`
 and TypeScript's structural typing handles the rest.
 
+`@absolutejs/metrics/handoff` exposes `handoffCollector()`. It exports only
+the closed handoff source/outcome vocabularies as labels; correlation ids,
+services, operations, messages, and references are intentionally excluded to
+prevent unbounded metric cardinality.
+
 ## Custom metrics
 
 ```ts

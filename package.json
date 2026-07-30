@@ -1,6 +1,6 @@
 {
 	"name": "@absolutejs/metrics",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "Prometheus / OpenMetrics exposure for the AbsoluteJS substrate. Standardizes every package's metrics() shape into MetricSample[] + a Prometheus text-format renderer + an Elysia metricsPlugin. Per-source collectors as subpaths: runtime, router, egress, queue, sync, secrets, rate-limit, audit, dispatch, errors, logs.",
 	"repository": {
 		"type": "git",
@@ -88,6 +88,11 @@
 			"import": "./dist/collectors/errors.js",
 			"default": "./dist/collectors/errors.js"
 		},
+		"./handoff": {
+			"types": "./dist/collectors/handoff.d.ts",
+			"import": "./dist/collectors/handoff.js",
+			"default": "./dist/collectors/handoff.js"
+		},
 		"./logs": {
 			"types": "./dist/collectors/logs.d.ts",
 			"import": "./dist/collectors/logs.js",
@@ -108,7 +113,7 @@
 		"README.md"
 	],
 	"scripts": {
-		"build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/router.ts src/collectors/egress.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts src/collectors/errors.ts src/collectors/logs.ts src/manifest.ts --outdir dist --root src --sourcemap --target=bun --external elysia && tsc --project tsconfig.build.json && absolute-manifest emit",
+		"build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/router.ts src/collectors/egress.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts src/collectors/errors.ts src/collectors/handoff.ts src/collectors/logs.ts src/manifest.ts --outdir dist --root src --sourcemap --target=bun --external @absolutejs/handoff --external elysia && tsc --project tsconfig.build.json && absolute-manifest emit",
 		"test": "bun test tests/",
 		"typecheck": "tsc --noEmit",
 		"format": "prettier --write \"./**/*.{ts,json,md}\"",
@@ -138,6 +143,7 @@
 		"typescript": "^5.9.0"
 	},
 	"dependencies": {
+		"@absolutejs/handoff": "0.1.0",
 		"@absolutejs/manifest": "^0.7.1",
 		"@sinclair/typebox": "^0.34.0"
 	}
