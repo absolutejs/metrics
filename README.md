@@ -1,5 +1,7 @@
 # @absolutejs/metrics
 
+Prometheus counters, gauges, cumulative histogram families, collectors, and an authenticated Elysia exposition plugin for AbsoluteJS services.
+
 Prometheus / OpenMetrics exposure for the AbsoluteJS substrate. Every
 substrate package already exposes a typed `metrics()` snapshot — this
 package converts those snapshots into the scrape format Prometheus,

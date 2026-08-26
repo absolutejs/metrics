@@ -7,6 +7,7 @@ import {
 	counter,
 	createMetricsRegistry,
 	gauge,
+	histogram,
 	metricsPlugin,
 	PROMETHEUS_CONTENT_TYPE,
 	renderPrometheus,
@@ -98,6 +99,64 @@ describe('renderPrometheus', () => {
 
 	test('empty input → empty string', () => {
 		expect(renderPrometheus([])).toBe('');
+	});
+
+	test('renders histogram rows under one family', () => {
+		const text = renderPrometheus(
+			histogram(
+				'abs_request_duration_ms',
+				{
+					buckets: [
+						{ count: 2, le: 10 },
+						{ count: 4, le: 100 }
+					],
+					count: 5,
+					sum: 151
+				},
+				{
+					help: 'Request duration',
+					labels: { operation: 'claim' }
+				}
+			)
+		);
+
+		expect(text).toContain(
+			'# HELP abs_request_duration_ms Request duration'
+		);
+		expect(text).toContain('# TYPE abs_request_duration_ms histogram');
+		expect(text).not.toContain('# TYPE abs_request_duration_ms_bucket');
+		expect(text).toContain(
+			'abs_request_duration_ms_bucket{operation="claim",le="10"} 2'
+		);
+		expect(text).toContain(
+			'abs_request_duration_ms_bucket{operation="claim",le="+Inf"} 5'
+		);
+		expect(text).toContain(
+			'abs_request_duration_ms_sum{operation="claim"} 151'
+		);
+		expect(text).toContain(
+			'abs_request_duration_ms_count{operation="claim"} 5'
+		);
+	});
+
+	test('rejects invalid histogram bucket sequences and reserved labels', () => {
+		expect(() =>
+			histogram('abs_request_duration_ms', {
+				buckets: [
+					{ count: 2, le: 100 },
+					{ count: 1, le: 10 }
+				],
+				count: 2,
+				sum: 20
+			})
+		).toThrow('boundaries must increase');
+		expect(() =>
+			histogram(
+				'abs_request_duration_ms',
+				{ buckets: [], count: 0, sum: 0 },
+				{ labels: { le: 'unsafe' } }
+			)
+		).toThrow('cannot define "le"');
 	});
 });
 

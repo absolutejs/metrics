@@ -1,5 +1,12 @@
 # @absolutejs/metrics changelog
 
+## 0.4.1 — 2026-08-26
+
+- Adds standards-correct cumulative Prometheus histogram families with one
+  shared `HELP`/`TYPE` declaration and `_bucket`, `_sum`, and `_count` rows.
+- Rejects unordered boundaries, non-cumulative counts, and caller-supplied
+  `le` labels.
+
 ## 0.2.6 — 2026-07-14
 
 - Adds `@absolutejs/metrics/router`, translating route and acquire counters,

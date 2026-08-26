@@ -40,6 +40,8 @@ export type MetricType = 'counter' | 'gauge' | 'histogram' | 'untyped';
  * must match `[a-zA-Z_][a-zA-Z0-9_]*`.
  */
 export type MetricSample = {
+	/** Metric family used for HELP/TYPE metadata when row names carry suffixes. */
+	family?: string;
 	/** Metric name. Prometheus convention: `abs_<source>_<metric>` (lowercase, snake_case). */
 	name: string;
 	/** Numeric value. Counters MUST be monotonically non-decreasing; gauges may go up/down. */
@@ -58,6 +60,12 @@ export type MetricSample = {
  * core library never has a hard dep on the source package.
  */
 export type MetricCollector = () => Promise<MetricSample[]> | MetricSample[];
+
+export type HistogramSnapshot = {
+	buckets: readonly { count: number; le: number }[];
+	count: number;
+	sum: number;
+};
 
 // =============================================================================
 // Registry
@@ -169,11 +177,17 @@ export const renderPrometheus = (samples: MetricSample[]): string => {
 				`[metrics] invalid metric name "${sample.name}" — must match /^[a-zA-Z_:][a-zA-Z0-9_:]*$/`
 			);
 		}
-		let group = groups.get(sample.name);
+		const family = sample.family ?? sample.name;
+		if (!NAME_PATTERN.test(family)) {
+			throw new Error(
+				`[metrics] invalid metric family "${family}" — must match /^[a-zA-Z_:][a-zA-Z0-9_:]*$/`
+			);
+		}
+		let group = groups.get(family);
 		if (group === undefined) {
 			group = { rows: [], type: sample.type };
 			if (sample.help !== undefined) group.help = sample.help;
-			groups.set(sample.name, group);
+			groups.set(family, group);
 		}
 		// First-seen type + help win. Later samples with different types are
 		// suspicious but tolerable; we don't override.
@@ -253,7 +267,10 @@ export const metricsPlugin = async (
 		app = new mod.Elysia({ name: '@absolutejs/metrics' });
 	}
 	app.get(path, async ({ request }) => {
-		if (options.authorize !== undefined && !(await options.authorize(request))) {
+		if (
+			options.authorize !== undefined &&
+			!(await options.authorize(request))
+		) {
 			return options.onUnauthorized !== undefined
 				? options.onUnauthorized(request)
 				: new Response('Unauthorized', {
@@ -311,3 +328,63 @@ export const gauge = (
 	...(options.help !== undefined ? { help: options.help } : {}),
 	...(options.labels !== undefined ? { labels: options.labels } : {})
 });
+
+/** Build a standards-correct cumulative Prometheus histogram family. */
+export const histogram = (
+	name: string,
+	snapshot: HistogramSnapshot,
+	options: { help?: string; labels?: Record<string, string> } = {}
+): MetricSample[] => {
+	if (options.labels?.le !== undefined)
+		throw new Error('[metrics] histogram labels cannot define "le"');
+	let previousBoundary = -Infinity;
+	let previousCount = 0;
+	const rows = snapshot.buckets.map((bucket) => {
+		if (bucket.le <= previousBoundary)
+			throw new Error('[metrics] histogram boundaries must increase');
+		if (bucket.count < previousCount || bucket.count > snapshot.count)
+			throw new Error('[metrics] histogram counts must be cumulative');
+		previousBoundary = bucket.le;
+		previousCount = bucket.count;
+
+		return {
+			family: name,
+			help: options.help,
+			labels: {
+				...options.labels,
+				le: String(bucket.le)
+			},
+			name: `${name}_bucket`,
+			type: 'histogram' as const,
+			value: bucket.count
+		};
+	});
+	rows.push({
+		family: name,
+		help: options.help,
+		labels: { ...options.labels, le: '+Inf' },
+		name: `${name}_bucket`,
+		type: 'histogram',
+		value: snapshot.count
+	});
+
+	return [
+		...rows,
+		{
+			family: name,
+			help: options.help,
+			labels: options.labels,
+			name: `${name}_sum`,
+			type: 'histogram',
+			value: snapshot.sum
+		},
+		{
+			family: name,
+			help: options.help,
+			labels: options.labels,
+			name: `${name}_count`,
+			type: 'histogram',
+			value: snapshot.count
+		}
+	];
+};
