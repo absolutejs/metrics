@@ -96,15 +96,17 @@
 		"access": "public"
 	},
 	"files": [
-		"dist",
-		"README.md"
+		"CHANGELOG.md",
+		"README.md",
+		"changelog.json",
+		"dist"
 	],
 	"scripts": {
 		"build": "rm -rf dist && bun build src/index.ts src/collectors/runtime.ts src/collectors/router.ts src/collectors/egress.ts src/collectors/queue.ts src/collectors/sync.ts src/collectors/secrets.ts src/collectors/rateLimit.ts src/collectors/audit.ts src/collectors/dispatch.ts src/collectors/errors.ts src/collectors/handoff.ts src/collectors/logs.ts src/manifest.ts --outdir dist --root src --sourcemap --target=bun --external @absolutejs/handoff --external elysia && tsc --project tsconfig.build.json && absolute-manifest emit",
 		"test": "bun test tests/",
 		"typecheck": "tsc --noEmit",
 		"format": "prettier --write \"./**/*.{ts,json,md}\"",
-		"check:package": "bun run typecheck && bun run build && bun run test",
+		"check:package": "bun run typecheck && bun run build && bun run test && absolute-changelog check",
 		"release": "bun run format && bun run check:package && bun publish"
 	},
 	"keywords": [
@@ -124,6 +126,7 @@
 		}
 	},
 	"devDependencies": {
+		"@absolutejs/changelog": "^0.1.2",
 		"@types/bun": "^1.3.14",
 		"elysia": "2.0.0-beta.6",
 		"exact-mirror": "1.2.4",
